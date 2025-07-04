@@ -6,7 +6,11 @@
     "esModuleInterop": true,
     "moduleResolution": "node",
     "outDir": "dist",
-    "rootDir": "."
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "src/*": ["src/*"]
+    }
   },
   "include": ["src", "main.ts"]
 }
