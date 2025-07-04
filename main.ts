@@ -8,10 +8,10 @@ import chalk from 'chalk';
 import ora from 'ora';
 import ProgressBar from 'progress';
 import { getAccessToken, getPlaylistTracks, searchTracks, SearchResult } from './spotify.js';
-import { fetchDownloadLink } from './dl.js';
-import { addToAria2 } from './aria2.js';
-import { config } from './config.js';
-import { checkFileExists } from './utils.js';
+import { fetchDownloadLink } from 'src/dl-script/dl.js';
+import { addToAria2 } from 'src/dl-script/aria2.js';
+import { config } from 'src/config.js';
+import { checkFileExists } from 'src/utils.js';
 
 dotenv.config();
 

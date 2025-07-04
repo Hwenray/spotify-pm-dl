@@ -1,8 +1,8 @@
 // track.ts
 import fs from 'fs/promises';
 import path from 'path';
-import { fetchDownloadLink } from './dl.js';
-import { addToAria2 } from './aria2.js';
+import { fetchDownloadLink } from 'dl-script/dl.js';
+import { addToAria2 } from 'dl-script/aria2.js';
 import { FailedTrack } from './types.js';
 import { config } from './config.js';
 

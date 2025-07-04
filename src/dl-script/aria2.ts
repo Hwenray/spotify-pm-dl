@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { config } from './config.js';
+import { config } from '../config.js';
 
 export async function addToAria2(downloadLink: string, fileName: string): Promise<void> {
   const payload = {
