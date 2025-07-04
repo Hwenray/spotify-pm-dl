@@ -6,7 +6,7 @@
     "esModuleInterop": true,
     "moduleResolution": "node",
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "."
   },
-  "include": ["src"]
+  "include": ["src", "main.ts"]
 }
