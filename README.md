@@ -19,6 +19,10 @@ npx tsc
 ```bash
 chmod +x dist/main.js
 ```
+> 读取不到变量时
+```bash
+source .env
+```
 # 命令
 > 下载歌单
 ```bash
