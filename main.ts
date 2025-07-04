@@ -7,7 +7,7 @@ import axios from 'axios';
 import chalk from 'chalk';
 import ora from 'ora';
 import ProgressBar from 'progress';
-import { getAccessToken, getPlaylistTracks, searchTracks, SearchResult } from 'src/spotify.js';
+import { getAccessToken, getPlaylistTracks, searchTracks, SearchResult } from 'src/sp-script/spotify.js';
 import { fetchDownloadLink } from 'src/dl-script/dl.js';
 import { addToAria2 } from 'src/dl-script/aria2.js';
 import { config } from 'src/config.js';

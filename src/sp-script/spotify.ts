@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { SpotifyPlaylistResponse, SpotifyTokenResponse, SpotifyTrackItem } from './types.js';
-import { config } from './config.js';
+import { SpotifyPlaylistResponse, SpotifyTokenResponse, SpotifyTrackItem } from '../types.js';
+import { config } from '../config.js';
 
 // 搜索结果类型定义
 export interface SearchResult {
