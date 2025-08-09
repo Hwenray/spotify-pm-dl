@@ -109,3 +109,79 @@ export async function getPlaylistTracks(
 
   return { name: playlistName, tracks };
 }
+
+/**
+ * 通过 Spotify track URL 或 ID 获取元数据（标题与艺术家）。
+ */
+export async function getTrackInfoFromUrl(
+  trackUrlOrId: string,
+  accessToken: string
+): Promise<{ title: string; artist: string } | null> {
+  // 提取 track id
+  let trackId = trackUrlOrId;
+  const urlMatch = trackUrlOrId.match(/track\/([a-zA-Z0-9]+)/);
+  if (urlMatch) {
+    trackId = urlMatch[1];
+  }
+  // 兼容 spotify:track:ID 形式
+  const uriMatch = trackUrlOrId.match(/spotify:track:([a-zA-Z0-9]+)/);
+  if (uriMatch) {
+    trackId = uriMatch[1];
+  }
+
+  try {
+    const response = await axios.get(`https://api.spotify.com/v1/tracks/${trackId}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const data = response.data;
+    const title: string = data.name;
+    const artist: string = data.artists.map((a: any) => a.name).join(', ');
+    return { title, artist };
+  } catch (error: any) {
+    console.error('获取单曲信息失败：', error.message);
+    return null;
+  }
+}
+
+/**
+ * 获取专辑/EP中所有歌曲及专辑名
+ */
+export async function getAlbumTracks(
+  albumId: string,
+  accessToken: string
+): Promise<{ name: string; tracks: string[] }> {
+  const tracks: string[] = [];
+  let albumName = '';
+
+  try {
+    let url = `https://api.spotify.com/v1/albums/${albumId}`;
+    const albumResponse = await axios.get(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    albumName = albumResponse.data.name;
+    let items = albumResponse.data.tracks.items;
+    tracks.push(
+      ...items.map((item: any) => item.external_urls.spotify ?? item.track?.external_urls?.spotify)
+            .filter((u: string | undefined) => Boolean(u))
+    );
+
+    // 分页
+    let nextUrl = albumResponse.data.tracks.next;
+    while (nextUrl) {
+      const resp = await axios.get(nextUrl, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      items = resp.data.items;
+      tracks.push(
+        ...items.map((item: any) => item.external_urls.spotify ?? item.track?.external_urls?.spotify)
+              .filter((u: string | undefined) => Boolean(u))
+      );
+      nextUrl = resp.data.next;
+    }
+  } catch (error: any) {
+    console.error('获取专辑失败：', error.message);
+  }
+
+  return { name: albumName, tracks };
+}

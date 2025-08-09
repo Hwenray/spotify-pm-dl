@@ -5,6 +5,12 @@
 - 支持关键词搜索 Spotify 单曲并下载
 - 自动跳过已下载歌曲，支持断点重试
 
+## 新增特性
+- 使用 yt-dlp 搜索并抽取音频（默认保存为 mp3），支持可选 `YTDLP_COOKIES`
+- 下载歌单、专辑/EP 时自动创建以歌单/专辑名命名的子目录；目录名会按 Windows/Linux 规则清洗
+- 新增命令：`dl album <url>`（别名 `a`）下载专辑/EP
+- 直接传入 Spotify URL 时，自动识别歌单或专辑
+
 ---
 
 # 安装依赖
@@ -29,6 +35,19 @@ source .env
 npx dl playlist <Playlist link>
 # 或者
 npx dl p <Playlist link>
+```
+> 下载专辑/EP
+```bash
+npx dl album <Album link>
+# 或者
+npx dl a <Album link>
+```
+> 直接传入 URL（自动识别歌单/专辑）
+```bash
+# 歌单
+npx dl https://open.spotify.com/playlist/xxxxxxxxxxxx
+# 专辑/EP
+npx dl https://open.spotify.com/album/xxxxxxxxxxxx
 ```
 > 搜索下载单曲
 ```
@@ -59,8 +78,10 @@ DOWNLOAD_DIR=/absolute/path/to/your/downloads
 ```
 ---
 # 提示
-请确保 Aria2 已启动并开启 RPC 接口
+请确保本机已安装并可执行 `yt-dlp`（在终端可运行 `yt-dlp --version`）
 
-下载链接通过第三方服务获取，需保持网络正常
+Aria2（可选）：旧版本流程使用 Aria2，现在默认下载不再依赖 Aria2
+
+默认通过 yt-dlp 从 YouTube 抽取音频；如需提升可访问性，可配置可选环境变量 `YTDLP_COOKIES`
 
 本项目仅用于学习交流，请勿用于商业用途

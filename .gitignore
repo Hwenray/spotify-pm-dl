@@ -15,3 +15,5 @@ Thumbs.db
 *.swo
 .cache/
 *.back
+cookies.txt
+aria2.conf
