@@ -185,3 +185,70 @@ export async function getAlbumTracks(
 
   return { name: albumName, tracks };
 }
+
+// 完整曲目信息类型
+export interface FullTrackInfo {
+  title: string;
+  artist: string; // 主要表演者（join）
+  album: string;
+  albumArtists: string; // 专辑艺术家（join）
+  releaseDate?: string; // YYYY-MM-DD 或 YYYY
+  trackNumber?: number;
+  discNumber?: number;
+  totalTracks?: number;
+  isrc?: string;
+  images: Array<{ url: string; width: number; height: number }>; // 专辑封面
+}
+
+/**
+ * 通过 URL/ID 获取完整曲目信息（含专辑封面列表）。
+ */
+export async function getTrackFullInfo(
+  trackUrlOrId: string,
+  accessToken: string
+): Promise<FullTrackInfo | null> {
+  let trackId = trackUrlOrId;
+  const urlMatch = trackUrlOrId.match(/track\/([a-zA-Z0-9]+)/);
+  if (urlMatch) trackId = urlMatch[1];
+  const uriMatch = trackUrlOrId.match(/spotify:track:([a-zA-Z0-9]+)/);
+  if (uriMatch) trackId = uriMatch[1];
+
+  try {
+    const response = await axios.get(`https://api.spotify.com/v1/tracks/${trackId}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const t = response.data;
+    const album = t.album;
+    const info: FullTrackInfo = {
+      title: t.name,
+      artist: t.artists.map((a: any) => a.name).join(', '),
+      album: album?.name ?? '',
+      albumArtists: (album?.artists ?? t.artists ?? []).map((a: any) => a.name).join(', '),
+      releaseDate: album?.release_date,
+      trackNumber: t.track_number,
+      discNumber: t.disc_number,
+      totalTracks: album?.total_tracks,
+      isrc: t.external_ids?.isrc,
+      images: (album?.images ?? []).map((img: any) => ({ url: img.url, width: img.width, height: img.height })),
+    };
+    return info;
+  } catch (error: any) {
+    console.error('获取完整曲目信息失败：', error.message);
+    return null;
+  }
+}
+
+/**
+ * 选择最合适的封面 URL：优先 300px，否则选择最接近的尺寸（若无则返回 null）。
+ */
+export function selectAlbumImageUrl(
+  images: Array<{ url: string; width: number; height: number }>,
+  preferred: number = 300
+): string | null {
+  if (!images || images.length === 0) return null;
+  const exact = images.find((img) => img.height === preferred || img.width === preferred);
+  if (exact) return exact.url;
+  // 选择与目标差值最小的
+  const sorted = [...images].sort((a, b) => Math.abs((a.height ?? 0) - preferred) - Math.abs((b.height ?? 0) - preferred));
+  return sorted[0]?.url ?? null;
+}
