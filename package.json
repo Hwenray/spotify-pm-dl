@@ -7,7 +7,9 @@
     "ydl": "./dist/ytdlp-cli.js"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "setup-kugou": "node scripts/setup-kugou.js",
+    "test-kugou": "node scripts/test-kugou-integration.js"
   },
   "dependencies": {
     "axios": "^1.6.8",
@@ -15,14 +17,19 @@
     "commander": "^11.0.0",
     "dotenv": "^17.0.1",
     "inquirer": "^12.7.0",
+    "jimp": "^1.6.0",
+    "jsqr": "^1.4.0",
     "ora": "^8.2.0",
     "progress": "^2.0.3",
+    "qrcode-terminal": "^0.12.0",
     "ts-node": "^10.9.2",
     "youtube-search-api": "^2.0.0"
   },
   "devDependencies": {
     "@types/node": "^24.0.10",
+    "@types/pngjs": "^6.0.5",
     "@types/progress": "^2.0.7",
+    "@types/qrcode-terminal": "^0.12.2",
     "typescript": "^5.9.2",
     "vite-node": "^3.2.4"
   }

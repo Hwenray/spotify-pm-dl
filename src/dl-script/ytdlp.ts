@@ -75,18 +75,43 @@ export async function writeId3v24Utf8Tags(
   },
   coverImageUrl?: string
 ): Promise<void> {
+  // 如果有封面URL，先尝试写入带封面的版本，失败则回退到无封面版本
+  if (coverImageUrl) {
+    try {
+      await writeId3TagsWithCover(inputMp3Path, outputMp3Path, meta, coverImageUrl);
+      return;
+    } catch (error: any) {
+      console.log(`封面嵌入失败，回退到无封面模式: ${error.message}`);
+      // 继续执行无封面版本
+    }
+  }
+
+  // 无封面版本或封面失败后的回退
+  return writeId3TagsWithoutCover(inputMp3Path, outputMp3Path, meta);
+}
+
+/**
+ * 写入带封面的ID3标签
+ */
+async function writeId3TagsWithCover(
+  inputMp3Path: string,
+  outputMp3Path: string,
+  meta: any,
+  coverImageUrl: string
+): Promise<void> {
   return new Promise((resolve, reject) => {
     const args: string[] = [];
-    // 输入
     args.push('-y');
     args.push('-i', inputMp3Path);
+    args.push('-i', coverImageUrl);
 
-    // 可选封面
-    if (coverImageUrl) {
-      args.push('-i', coverImageUrl);
-    }
+    // 添加网络超时和重试参数
+    args.push('-timeout', '10000000'); // 10秒超时
+    args.push('-reconnect', '1');
+    args.push('-reconnect_streamed', '1');
+    args.push('-reconnect_delay_max', '2');
 
-    // 元数据（ffmpeg 写 ID3v2，指定 v2.4）
+    // 元数据
     if (meta.title) args.push('-metadata', `title=${meta.title}`);
     if (meta.artist) args.push('-metadata', `artist=${meta.artist}`);
     if (meta.album) args.push('-metadata', `album=${meta.album}`);
@@ -95,22 +120,15 @@ export async function writeId3v24Utf8Tags(
     if (meta.track) args.push('-metadata', `track=${meta.track}`);
     if (meta.disc) args.push('-metadata', `disc=${meta.disc}`);
 
-    // 若存在封面，映射并设置为封面流
-    if (coverImageUrl) {
-      args.push('-map', '0:a');
-      args.push('-map', '1:v');
-      args.push('-c:a', 'copy');
-      args.push('-c:v', 'mjpeg');
-      args.push('-id3v2_version', '4');
-      args.push('-metadata:s:v', 'title=Album cover');
-      args.push('-metadata:s:v', 'comment=Cover (front)');
-      args.push('-disposition:v', 'attached_pic');
-    } else {
-      args.push('-c', 'copy');
-      args.push('-id3v2_version', '4');
-    }
-
-    // 强制输出格式为 mp3，避免临时文件扩展名导致识别失败
+    // 封面映射
+    args.push('-map', '0:a');
+    args.push('-map', '1:v');
+    args.push('-c:a', 'copy');
+    args.push('-c:v', 'mjpeg');
+    args.push('-id3v2_version', '4');
+    args.push('-metadata:s:v', 'title=Album cover');
+    args.push('-metadata:s:v', 'comment=Cover (front)');
+    args.push('-disposition:v', 'attached_pic');
     args.push('-f', 'mp3');
     args.push(outputMp3Path);
 
@@ -122,8 +140,54 @@ export async function writeId3v24Utf8Tags(
     }
 
     child.on('error', (e) => {
-      reject(new Error(`无法启动 ffmpeg，请确认已安装并在 PATH 中可用：${e.message}`));
+      reject(new Error(`无法启动 ffmpeg：${e.message}`));
     });
+
+    child.on('close', (code) => {
+      if (code === 0) return resolve();
+      reject(new Error(err || `ffmpeg 退出码 ${code}`));
+    });
+  });
+}
+
+/**
+ * 写入无封面的ID3标签
+ */
+async function writeId3TagsWithoutCover(
+  inputMp3Path: string,
+  outputMp3Path: string,
+  meta: any
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const args: string[] = [];
+    args.push('-y');
+    args.push('-i', inputMp3Path);
+
+    // 元数据
+    if (meta.title) args.push('-metadata', `title=${meta.title}`);
+    if (meta.artist) args.push('-metadata', `artist=${meta.artist}`);
+    if (meta.album) args.push('-metadata', `album=${meta.album}`);
+    if (meta.albumArtist) args.push('-metadata', `album_artist=${meta.albumArtist}`);
+    if (meta.date) args.push('-metadata', `date=${meta.date}`);
+    if (meta.track) args.push('-metadata', `track=${meta.track}`);
+    if (meta.disc) args.push('-metadata', `disc=${meta.disc}`);
+
+    args.push('-c', 'copy');
+    args.push('-id3v2_version', '4');
+    args.push('-f', 'mp3');
+    args.push(outputMp3Path);
+
+    const child = spawn('ffmpeg', args, { stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true });
+
+    let err = '';
+    if (child.stderr) {
+      child.stderr.on('data', (d) => (err += d.toString()));
+    }
+
+    child.on('error', (e) => {
+      reject(new Error(`无法启动 ffmpeg：${e.message}`));
+    });
+
     child.on('close', (code) => {
       if (code === 0) return resolve();
       reject(new Error(err || `ffmpeg 退出码 ${code}`));
