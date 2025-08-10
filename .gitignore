@@ -17,3 +17,4 @@ Thumbs.db
 *.back
 cookies.txt
 aria2.conf
+.claude/
